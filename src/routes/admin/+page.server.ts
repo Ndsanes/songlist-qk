@@ -1,5 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
 
+import { inferSongLanguage } from '$lib/language';
 import { clearAdminSession } from '$lib/server/auth';
 import { getAdminDashboardData, resetDatabase as resetSonglistDatabase } from '$lib/server/catalog';
 import { getErrorMessage, getValidationMessage } from '$lib/server/errors';
@@ -140,7 +141,7 @@ export const actions: Actions = {
           status: 'ready',
           songs: playlistSongs.map((song) => ({
             ...song,
-            language: '其他',
+            language: inferSongLanguage(song.title, song.artist),
             tagsInput: ''
           }))
         }
@@ -179,7 +180,7 @@ export const actions: Actions = {
           songs: [
             {
               ...song,
-              language: '其他',
+              language: inferSongLanguage(song.title, song.artist),
               tagsInput: ''
             }
           ]

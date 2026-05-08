@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 
 import { fail } from '@sveltejs/kit';
 
+import { inferSongLanguage } from '$lib/language';
 import { getPublicCatalog } from '$lib/server/catalog';
 import { getErrorMessage, getValidationMessage } from '$lib/server/errors';
 import { requestFormValuesSchema } from '$lib/server/form-schemas';
@@ -45,7 +46,8 @@ export const actions: Actions = {
           ...rawValues,
           songInput: parsed.data.songInput,
           songTitle: song.title,
-          artist: song.artist
+          artist: song.artist,
+          language: inferSongLanguage(song.title, song.artist)
         }
       };
     } catch (error) {
