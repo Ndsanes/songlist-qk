@@ -6,6 +6,7 @@ import { getErrorMessage, getValidationMessage } from '$lib/server/errors';
 import {
   bulkUpdateSongsFormSchema,
   deleteSongFormSchema,
+  maxPlaylistImportSongCount,
   playlistImportFormSchema,
   playlistPreviewFormValuesSchema,
   profileFormSchema,
@@ -129,7 +130,7 @@ export const actions: Actions = {
     }
 
     try {
-      const playlistSongs = await fetchNeteasePlaylistSongs(parsed.data.playlistInput);
+      const playlistSongs = await fetchNeteasePlaylistSongs(parsed.data.playlistInput, maxPlaylistImportSongCount);
 
       return {
         kind: 'preview-ready' as const,

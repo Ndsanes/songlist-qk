@@ -4,7 +4,7 @@ import { zfd } from 'zod-form-data';
 import { pageSettingsSchema, playlistImportSettingsSchema, requestDecisionSchema, songSchema } from '$lib/validators';
 
 const formText = z.string().default('');
-const maxPlaylistImportSongCount = 5000;
+export const maxPlaylistImportSongCount = 5000;
 const playlistImportSongCountMessage = `单次最多导入 ${maxPlaylistImportSongCount} 首歌曲。`;
 const playlistImportTextRows = z.array(formText).max(maxPlaylistImportSongCount, playlistImportSongCountMessage);
 const playlistImportSelectedRows = z

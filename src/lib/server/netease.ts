@@ -19,7 +19,7 @@ type NeteasePlaylistResponse = {
   body?: {
     code?: number;
     playlist?: {
-      tracks?: NeteaseTrack[];
+      trackIds?: NeteaseTrackId[];
     };
   };
 };
@@ -35,6 +35,12 @@ export type NeteasePlaylistSong = {
   title: string;
   artist: string;
 };
+
+type NeteaseTrackId = {
+  id?: unknown;
+};
+
+const songDetailBatchSize = 1000;
 
 const getNeteaseApi = async () =>
   ((await import('@neteasecloudmusicapienhanced/api')) as { default: NeteaseApi }).default;
@@ -68,6 +74,9 @@ const extractSongId = (value: string) => extractNeteaseId(value, 'song', '请填
 
 const getArtistName = (artist: NeteaseArtist) => (typeof artist.name === 'string' ? artist.name.trim() : '');
 
+const getTrackId = (trackId: NeteaseTrackId) =>
+  typeof trackId.id === 'number' || typeof trackId.id === 'string' ? String(trackId.id) : '';
+
 const mapTrack = (track: NeteaseTrack): NeteasePlaylistSong | null => {
   const title = typeof track.name === 'string' ? track.name.trim() : '';
   const artists = (track.ar ?? track.artists ?? []).map(getArtistName).filter(Boolean);
@@ -82,14 +91,32 @@ const mapTrack = (track: NeteaseTrack): NeteasePlaylistSong | null => {
   };
 };
 
-export const fetchNeteasePlaylistSongs = async (playlistInput: string) => {
+export const fetchNeteasePlaylistSongs = async (playlistInput: string, maxSongs: number) => {
   const playlistId = extractPlaylistId(playlistInput);
   const api = await getNeteaseApi();
   const response = await api.playlist_detail({ id: playlistId });
-  const tracks = response.body?.playlist?.tracks;
+  const trackIds = response.body?.playlist?.trackIds;
 
-  if (response.body?.code !== 200 || !Array.isArray(tracks)) {
+  if (response.body?.code !== 200 || !Array.isArray(trackIds)) {
     throw new UserFacingError('读取网易云公开歌单失败。');
+  }
+
+  if (trackIds.length > maxSongs) {
+    throw new UserFacingError(`单次最多导入 ${maxSongs} 首歌曲。`);
+  }
+
+  const ids = trackIds.map(getTrackId).filter(Boolean);
+  const tracks: NeteaseTrack[] = [];
+
+  for (let index = 0; index < ids.length; index += songDetailBatchSize) {
+    const detail = await api.song_detail({ ids: ids.slice(index, index + songDetailBatchSize).join(',') });
+    const detailTracks = detail.body?.songs;
+
+    if (detail.body?.code !== 200 || !Array.isArray(detailTracks)) {
+      throw new UserFacingError('读取网易云公开歌单失败。');
+    }
+
+    tracks.push(...detailTracks);
   }
 
   const songs = tracks.map(mapTrack).filter((song): song is NeteasePlaylistSong => song !== null);
