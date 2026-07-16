@@ -59,7 +59,7 @@ node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"
 - 在 Supabase Auth 中至少创建一个管理员账号
 
 ## 技术栈
-
+--
 SvelteKit 2 · Svelte 5 · Vite 8 · Tailwind CSS 4 · Supabase · Zod 4 · `@neteasecloudmusicapienhanced/api`
 
 ## 许可证
